@@ -9,29 +9,33 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.example.healtech.dao.LoginDAO;
 
 import java.io.IOException;
 
 public class LoginController {
 
     @FXML
-    private TextField usernameField;
+    private TextField emailField;
 
     @FXML
     private PasswordField passwordField;
 
     @FXML
     private void handleLogin(ActionEvent event) {
-        String username = usernameField.getText();
+        String email = emailField.getText();
         String password = passwordField.getText();
 
-        if (username.isEmpty() || password.isEmpty()) {
+        if (email.isEmpty() || password.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Lỗi đăng nhập", "Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
             return;
         }
 
-        if (username.equals("admin") && password.equals("123")) {
-            loadScene("/org/example/healtech/view/DashboardView.fxml", "Dashboard");
+        boolean isValid = LoginDAO.checkLogin(email, password);
+
+        if (isValid) {
+            showAlert(Alert.AlertType.INFORMATION, "Đăng nhập thành công", "Chào mừng bạn!");
+            loadScene("/org/example/healtech/view/DashboardHomeView.fxml", "Dashboard");
         } else {
             showAlert(Alert.AlertType.ERROR, "Sai thông tin", "Tài khoản hoặc mật khẩu không chính xác!");
         }
@@ -46,7 +50,7 @@ public class LoginController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
-            Stage stage = (Stage) usernameField.getScene().getWindow();
+            Stage stage = (Stage) emailField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle(title);
             stage.show();

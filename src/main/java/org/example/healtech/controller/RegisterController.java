@@ -7,12 +7,18 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import org.example.healtech.dao.RegisterDAO;
+import org.example.healtech.model.NhanVien;
+
 import java.io.IOException;
 
 public class RegisterController {
 
     @FXML
-    private TextField usernameField;
+    private TextField fullnameField;
+
+    @FXML
+    private TextField emailField;
 
     @FXML
     private PasswordField passwordField;
@@ -20,13 +26,16 @@ public class RegisterController {
     @FXML
     private PasswordField confirmPasswordField;
 
+    private final RegisterDAO registerDAO = new RegisterDAO();
+
     @FXML
     private void handleRegister(ActionEvent event) {
-        String username = usernameField.getText();
+        String fullname = fullnameField.getText();
+        String email = emailField.getText();
         String password = passwordField.getText();
         String confirm = confirmPasswordField.getText();
 
-        if (username.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
+        if (fullname.isEmpty() || email.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Lỗi", "Vui lòng nhập đầy đủ thông tin!");
             return;
         }
@@ -36,27 +45,28 @@ public class RegisterController {
             return;
         }
 
-        // Giả lập đăng ký thành công
-        showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đăng ký thành công! Hãy đăng nhập.");
 
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/healtech/view/LoginView.fxml"));
-            Parent root = loader.load();
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Đăng nhập");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
+        NhanVien nv = new NhanVien(fullname, email, password);
+        boolean success = registerDAO.registerUser(nv);
+
+        if (success) {
+            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đăng ký thành công! Hãy đăng nhập.");
+            goToLogin();
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Lỗi", "Không thể đăng ký tài khoản!");
         }
     }
 
     @FXML
     private void handleBackToLogin(ActionEvent event) {
+        goToLogin();
+    }
+
+    private void goToLogin() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/healtech/view/LoginView.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) usernameField.getScene().getWindow();
+            Stage stage = (Stage) fullnameField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Đăng nhập");
             stage.show();

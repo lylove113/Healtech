@@ -22,7 +22,7 @@
                 <VBox alignment="CENTER" spacing="10">
                     <children>
                         <Label styleClass="form-title" text="ĐĂNG NHẬP"/>
-                        <TextField fx:id="usernameField" promptText="Tài khoản người dùng" styleClass="input-field"/>
+                        <TextField fx:id="emailField" promptText="Email người dùng" styleClass="input-field"/>
                         <PasswordField fx:id="passwordField" promptText="Mật khẩu" styleClass="input-field"/>
                         <Button alignment="CENTER" styleClass="primary-btn" text="Đăng nhập" onAction="#handleLogin"/>
                         <Hyperlink styleClass="link-text" text="Chưa có tài khoản? Đăng ký" onAction="#handleRegister"/>
