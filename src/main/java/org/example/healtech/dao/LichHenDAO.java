@@ -1,63 +1,72 @@
 package org.example.healtech.dao;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import org.example.healtech.model.LichHen;
-import org.example.healtech.util.DBConnection;
+import org.example.healtech.model.LichHenDisplay; // <- (Bạn cần tạo file này như tôi đã gửi trước đó)
+import org.example.healtech.util.DBConnection; // <- (Giả sử file util của bạn tên là DBConnection)
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LichHenDAO {
 
-    // Lấy toàn bộ danh sách lịch hẹn
-    public static ObservableList<LichHen> getAllLichHen() {
-        ObservableList<LichHen> list = FXCollections.observableArrayList();
-        String query = "SELECT * FROM LichHen";
+    // Bỏ 'static' và dùng một biến connection cho đối tượng
+    private Connection conn;
 
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
+    // Constructor để khởi tạo connection
+    public LichHenDAO() {
+            this.conn = DBConnection.getConnection();
+    }
+
+    /**
+     * PHƯƠNG THỨC QUAN TRỌNG NHẤT
+     * Lấy dữ liệu JOIN để hiển thị lên TableView (gồm Tên BN, Tên BS)
+     */
+    public List<LichHenDisplay> getLichHenForView() {
+        List<LichHenDisplay> list = new ArrayList<>();
+        // Câu lệnh JOIN
+        String query = "SELECT lh.MaLichHen, lh.ThoiGianHen, lh.LyDoKham, lh.TrangThai, " +
+                "bn.HoTen AS TenBenhNhan, nv.HoTen AS TenBacSi " +
+                "FROM LichHen lh " +
+                "LEFT JOIN BenhNhan bn ON lh.MaBenhNhan = bn.MaBenhNhan " +
+                "LEFT JOIN NhanVien nv ON lh.MaBacSi = nv.MaNhanVien " +
+                "ORDER BY lh.ThoiGianHen DESC";
+
+        // Không dùng try-with-resources cho 'conn' ở đây
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
 
             while (rs.next()) {
-                LocalDateTime thoiGianHen = rs.getTimestamp("ThoiGianHen").toLocalDateTime();
-
-                LichHen lichHen = new LichHen(
+                LichHenDisplay lh = new LichHenDisplay(
                         rs.getInt("MaLichHen"),
-                        rs.getInt("MaBenhNhan"),
-                        rs.getInt("MaBacSi"),
-                        thoiGianHen,
+                        rs.getTimestamp("ThoiGianHen").toLocalDateTime(),
                         rs.getString("LyDoKham"),
-                        rs.getString("TrangThai")
+                        rs.getString("TrangThai"),
+                        rs.getString("TenBenhNhan"),
+                        rs.getString("TenBacSi")
                 );
-
-                list.add(lichHen);
+                list.add(lh);
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("❌ Lỗi khi lấy danh sách lịch hẹn: " + e.getMessage());
+            System.err.println("❌ Lỗi khi lấy danh sách lịch hẹn (JOIN): " + e.getMessage());
         }
-
         return list;
     }
 
-    // Thêm mới lịch hẹn
-    public static boolean addLichHen(LichHen lichHen) {
+    // Thêm mới lịch hẹn (dùng model LichHen cơ bản)
+    public boolean addLichHen(LichHen lichHen) {
         String query = "INSERT INTO LichHen (MaBenhNhan, MaBacSi, ThoiGianHen, LyDoKham, TrangThai) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setInt(1, lichHen.getMaBenhNhan());
             pstmt.setInt(2, lichHen.getMaBacSi());
             pstmt.setTimestamp(3, Timestamp.valueOf(lichHen.getThoiGianHen()));
             pstmt.setString(4, lichHen.getLyDoKham());
             pstmt.setString(5, lichHen.getTrangThai());
 
-            int rows = pstmt.executeUpdate();
-            return rows > 0;
-
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             System.err.println("❌ Lỗi khi thêm lịch hẹn: " + e.getMessage());
@@ -65,38 +74,35 @@ public class LichHenDAO {
         }
     }
 
-    // Cập nhật trạng thái lịch hẹn
-    public static boolean updateTrangThai(int maLichHen, String trangThai) {
-        String query = "UPDATE LichHen SET TrangThai = ? WHERE MaLichHen = ?";
+    /**
+     * Phương thức update đầy đủ (Thay thế cho updateTrangThai)
+     */
+    public boolean updateLichHen(LichHen lichHen) {
+        String query = "UPDATE LichHen SET MaBenhNhan = ?, MaBacSi = ?, ThoiGianHen = ?, LyDoKham = ?, TrangThai = ? WHERE MaLichHen = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, lichHen.getMaBenhNhan());
+            pstmt.setInt(2, lichHen.getMaBacSi());
+            pstmt.setTimestamp(3, Timestamp.valueOf(lichHen.getThoiGianHen()));
+            pstmt.setString(4, lichHen.getLyDoKham());
+            pstmt.setString(5, lichHen.getTrangThai());
+            pstmt.setInt(6, lichHen.getMaLichHen()); // MaLichHen ở cuối cho mệnh đề WHERE
 
-            pstmt.setString(1, trangThai);
-            pstmt.setInt(2, maLichHen);
-
-            int rows = pstmt.executeUpdate();
-            return rows > 0;
-
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("❌ Lỗi khi cập nhật trạng thái: " + e.getMessage());
+            System.err.println("❌ Lỗi khi cập nhật lịch hẹn: " + e.getMessage());
             return false;
         }
     }
 
     // Xóa lịch hẹn
-    public static boolean deleteLichHen(int maLichHen) {
+    public boolean deleteLichHen(int maLichHen) {
         String query = "DELETE FROM LichHen WHERE MaLichHen = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
             pstmt.setInt(1, maLichHen);
-
-            int rows = pstmt.executeUpdate();
-            return rows > 0;
-
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             System.err.println("❌ Lỗi khi xóa lịch hẹn: " + e.getMessage());

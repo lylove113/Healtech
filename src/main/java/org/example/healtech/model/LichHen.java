@@ -12,6 +12,9 @@ public class LichHen {
 
     // ===== Constructors =====
 
+    public LichHen() {
+    }
+
     // Constructor dùng khi thêm mới lịch hẹn
     public LichHen(int maBenhNhan, int maBacSi, LocalDateTime thoiGianHen, String lyDoKham) {
         this.maBenhNhan = maBenhNhan;

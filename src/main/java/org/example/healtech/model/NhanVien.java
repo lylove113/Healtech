@@ -21,6 +21,16 @@ public class NhanVien {
         this.soDienThoai = "";
     }
 
+    // ✅ Constructor đầy đủ dùng cho DAO
+    public NhanVien(int maNhanVien, String hoTen, String chuyenKhoa, String chucVu, String soDienThoai, String email) {
+        this.maNhanVien = maNhanVien;
+        this.hoTen = hoTen;
+        this.chuyenKhoa = chuyenKhoa;
+        this.chucVu = chucVu;
+        this.soDienThoai = soDienThoai;
+        this.email = email;
+    }
+
     public int getMaNhanVien() { return maNhanVien; }
     public void setMaNhanVien(int maNhanVien) { this.maNhanVien = maNhanVien; }
 
