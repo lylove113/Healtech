@@ -1,20 +1,21 @@
 module org.example.healtech {
     requires javafx.controls;
     requires javafx.fxml;
-    requires java.sql;
-    // (Bạn có thể cần 'requires mysql.connector.java;' nếu bạn dùng
-    // file jar driver mysql như một module)
 
-    // Dòng này cho phép FXML tải controller
+    // --- THÊM 2 DÒNG QUAN TRỌNG NÀY ---
+    requires java.sql;              // Để dùng Connection, ResultSet, DriverManager
+    requires mysql.connector.j;     // Để nhận diện Driver MySQL
+    // ----------------------------------
+
+    opens org.example.healtech to javafx.fxml;
+    exports org.example.healtech;
+
+    // Mở quyền truy cập cho các gói con (Controller, DAO, Model)
+    exports org.example.healtech.controller;
     opens org.example.healtech.controller to javafx.fxml;
 
-    // === THÊM DÒNG NÀY ĐỂ SỬA LỖI ===
-    // Dòng này cho phép TableView (javafx.base) truy cập các hàm
-    // get() trong các class Model của bạn (như LichHenDisplay)
-    opens org.example.healtech.model to javafx.base;
+    exports org.example.healtech.dao;
+    opens org.example.healtech.dao to javafx.fxml; // Có thể cần nếu dùng reflection
 
-    // Exports
-    exports org.example.healtech;
-    exports org.example.healtech.controller;
-    // (Bạn không cần export model hoặc dao)
+    exports org.example.healtech.model;
 }

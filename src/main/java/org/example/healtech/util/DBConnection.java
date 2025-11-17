@@ -5,21 +5,31 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/QL_PhongKham";
-    private static final String USER = "root";
-    private static final String PASSWORD = "";
-    // nếu dùng docker thì thêm "root" vào mật khẩu
+
+    // ✅ ĐÃ SỬA: Tên database chính xác theo hình bạn gửi là 'ql_phongkham'
+    private static final String URL = "jdbc:mysql://localhost:3306/ql_phongkham";
+
+    private static final String USER = "root"; // User mặc định của XAMPP
+    private static final String PASS = "";     // Mật khẩu mặc định của XAMPP (để trống)
 
     public static Connection getConnection() {
-        Connection connection = null;
-
         try {
-            connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println("✅ Kết nối MySQL thành công!");
-        } catch (SQLException e) {
-            System.err.println("❌ Lỗi kết nối database: " + e.getMessage());
-        }
+            // Nạp Driver (giúp tránh lỗi ClassNotFoundException trên một số phiên bản Java cũ)
+            Class.forName("com.mysql.cj.jdbc.Driver");
 
-        return connection;
+            // Tạo kết nối
+            return DriverManager.getConnection(URL, USER, PASS);
+
+        } catch (ClassNotFoundException e) {
+            System.err.println("❌ Lỗi: Không tìm thấy thư viện MySQL JDBC Driver!");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi kết nối CSDL!");
+            System.err.println("   -> URL: " + URL);
+            System.err.println("   -> User: " + USER);
+            System.err.println("   -> Kiểm tra xem XAMPP (MySQL) đã bật chưa?");
+            e.printStackTrace();
+        }
+        return null;
     }
 }

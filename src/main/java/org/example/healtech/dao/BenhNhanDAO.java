@@ -8,19 +8,52 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Lớp DAO quản lý Bệnh Nhân (Đã gộp và chuyển sang static)
+ */
 public class BenhNhanDAO {
-    private Connection conn;
 
-    public BenhNhanDAO() {
-        this.conn = DBConnection.getConnection();
+    // ✅ BỔ SUNG TỪ ĐOẠN 1 (Dùng cho KhamBenhController)
+    /**
+     * Lấy thông tin Tiền sử bệnh/Dị ứng của bệnh nhân
+     * @param maBenhNhan Mã bệnh nhân
+     * @return Chuỗi String dị ứng, hoặc "Không có"
+     */
+    public static String getThongTinDiUng(int maBenhNhan) {
+        // Tên cột của bạn là "TienSuBenh"
+        String sql = "SELECT TienSuBenh FROM benhnhan WHERE MaBenhNhan = ?";
+
+        // ✅ Luôn dùng try-with-resources cho cả Connection và PreparedStatement
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, maBenhNhan);
+
+            // ✅ ResultSet cũng nên nằm trong try-with-resources
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String diUng = rs.getString("TienSuBenh");
+                    return (diUng == null || diUng.trim().isEmpty()) ? "Không có" : diUng;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Không rõ"; // Trả về nếu có lỗi
     }
 
-    // Lấy tất cả bệnh nhân
-    public List<BenhNhan> getAllBenhNhan() {
+    // ===== CÁC PHƯƠNG THỨC TỪ ĐOẠN 2 (Đã sửa sang static) =====
+
+    /**
+     * ✅ Đã sửa: Thêm 'static' và 'try-with-resources'
+     */
+    public static List<BenhNhan> getAllBenhNhan() {
         List<BenhNhan> list = new ArrayList<>();
         String query = "SELECT * FROM BenhNhan ORDER BY MaBenhNhan ASC";
 
-        try (Statement stmt = conn.createStatement();
+        // ✅ Sửa: Thêm Connection vào try-with-resources
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
 
             while (rs.next()) {
@@ -34,11 +67,16 @@ public class BenhNhanDAO {
         return list;
     }
 
-    // Thêm bệnh nhân mới
-    public boolean addBenhNhan(BenhNhan benhNhan) {
+    /**
+     * ✅ Đã sửa: Thêm 'static' và 'try-with-resources'
+     */
+    public static boolean addBenhNhan(BenhNhan benhNhan) {
         String query = "INSERT INTO BenhNhan (HoTen, NgaySinh, GioiTinh, DiaChi, SoDienThoai, TienSuBenh) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        // ✅ Sửa: Thêm Connection vào try-with-resources
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
             pstmt.setString(1, benhNhan.getHoTen());
             pstmt.setDate(2, Date.valueOf(benhNhan.getNgaySinh()));
             pstmt.setString(3, benhNhan.getGioiTinh());
@@ -48,7 +86,6 @@ public class BenhNhanDAO {
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
-                // Lấy mã bệnh nhân vừa tạo
                 try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         benhNhan.setMaBenhNhan(generatedKeys.getInt(1));
@@ -64,11 +101,16 @@ public class BenhNhanDAO {
         }
     }
 
-    // Cập nhật bệnh nhân
-    public boolean updateBenhNhan(BenhNhan benhNhan) {
+    /**
+     * ✅ Đã sửa: Thêm 'static' và 'try-with-resources'
+     */
+    public static boolean updateBenhNhan(BenhNhan benhNhan) {
         String query = "UPDATE BenhNhan SET HoTen=?, NgaySinh=?, GioiTinh=?, DiaChi=?, SoDienThoai=?, TienSuBenh=? WHERE MaBenhNhan=?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        // ✅ Sửa: Thêm Connection vào try-with-resources
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
             pstmt.setString(1, benhNhan.getHoTen());
             pstmt.setDate(2, Date.valueOf(benhNhan.getNgaySinh()));
             pstmt.setString(3, benhNhan.getGioiTinh());
@@ -85,11 +127,16 @@ public class BenhNhanDAO {
         }
     }
 
-    // Xóa bệnh nhân
-    public boolean deleteBenhNhan(int maBenhNhan) {
+    /**
+     * ✅ Đã sửa: Thêm 'static' và 'try-with-resources'
+     */
+    public static boolean deleteBenhNhan(int maBenhNhan) {
         String query = "DELETE FROM BenhNhan WHERE MaBenhNhan=?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        // ✅ Sửa: Thêm Connection vào try-with-resources
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
             pstmt.setInt(1, maBenhNhan);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -99,27 +146,31 @@ public class BenhNhanDAO {
         }
     }
 
-    // Tìm kiếm bệnh nhân theo mã, tên hoặc SĐT
-    public List<BenhNhan> timKiemBenhNhan(String keyword) {
+    /**
+     * ✅ Đã sửa: Thêm 'static' và 'try-with-resources'
+     */
+    public static List<BenhNhan> timKiemBenhNhan(String keyword) {
         List<BenhNhan> list = new ArrayList<>();
         String query = "SELECT * FROM BenhNhan WHERE HoTen LIKE ? OR SoDienThoai LIKE ? OR MaBenhNhan = ? ORDER BY MaBenhNhan ASC";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        // ✅ Sửa: Thêm Connection vào try-with-resources
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
             pstmt.setString(1, "%" + keyword + "%");
             pstmt.setString(2, "%" + keyword + "%");
 
-            // Thử parse keyword thành số để tìm theo mã
             try {
                 pstmt.setInt(3, Integer.parseInt(keyword));
             } catch (NumberFormatException e) {
-                pstmt.setInt(3, -1); // Nếu không phải số, tìm với mã = -1 (sẽ không có kết quả)
+                pstmt.setInt(3, -1);
             }
 
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                BenhNhan bn = mapResultSetToBenhNhan(rs);
-                list.add(bn);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    BenhNhan bn = mapResultSetToBenhNhan(rs);
+                    list.add(bn);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -128,8 +179,10 @@ public class BenhNhanDAO {
         return list;
     }
 
-    // Helper method để map ResultSet sang BenhNhan
-    private BenhNhan mapResultSetToBenhNhan(ResultSet rs) throws SQLException {
+    /**
+     * ✅ Đã sửa: Thêm 'static'
+     */
+    private static BenhNhan mapResultSetToBenhNhan(ResultSet rs) throws SQLException {
         BenhNhan bn = new BenhNhan();
         bn.setMaBenhNhan(rs.getInt("MaBenhNhan"));
         bn.setHoTen(rs.getString("HoTen"));
@@ -144,9 +197,26 @@ public class BenhNhanDAO {
         bn.setSoDienThoai(rs.getString("SoDienThoai"));
         bn.setTienSuBenh(rs.getString("TienSuBenh"));
 
-        Date ngayTao = rs.getDate("NgayTao");
-        if (ngayTao != null) {
-            bn.setNgayTao(ngayTao.toLocalDate());
+        // Kiểm tra xem cột NgayTao có tồn tại không
+        try {
+            ResultSetMetaData metaData = rs.getMetaData();
+            boolean hasNgayTao = false;
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                if ("NgayTao".equalsIgnoreCase(metaData.getColumnName(i))) {
+                    hasNgayTao = true;
+                    break;
+                }
+            }
+
+            if (hasNgayTao) {
+                Date ngayTao = rs.getDate("NgayTao");
+                if (ngayTao != null) {
+                    bn.setNgayTao(ngayTao.toLocalDate());
+                }
+            }
+        } catch (SQLException e) {
+            // Bỏ qua nếu cột không tồn tại, ví dụ: "Column 'NgayTao' not found."
+            System.out.println("Lưu ý: Không tìm thấy cột 'NgayTao', bỏ qua việc map.");
         }
 
         return bn;

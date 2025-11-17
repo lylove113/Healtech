@@ -9,7 +9,7 @@ import org.example.healtech.model.Thuoc;
 
 import java.util.List;
 import java.util.Optional;
-
+import java.math.BigDecimal;
 public class ThuocController {
 
     @FXML private TableView<Thuoc> tableThuoc;
@@ -87,7 +87,7 @@ public class ThuocController {
 
             if (colGiaBan != null) {
                 colGiaBan.setCellValueFactory(cellData ->
-                        new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getGiaBan()).asObject());
+                        new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getDonGia().doubleValue()).asObject());
             }
 
             System.out.println("✅ Thiết lập table columns thành công!");
@@ -228,7 +228,7 @@ public class ThuocController {
             if (txtTenThuoc != null) txtTenThuoc.setText(thuoc.getTenThuoc());
             if (cbDonViTinh != null) cbDonViTinh.setValue(thuoc.getDonViTinh());
             if (txtSoLuongTon != null) txtSoLuongTon.setText(String.valueOf(thuoc.getSoLuongTon()));
-            if (txtGiaBan != null) txtGiaBan.setText(String.valueOf(thuoc.getGiaBan()));
+            if (txtGiaBan != null) txtGiaBan.setText(String.valueOf(thuoc.getDonGia()));
         }
     }
 
@@ -278,8 +278,7 @@ public class ThuocController {
             thuoc.setTenThuoc(tenThuoc);
             thuoc.setDonViTinh(donViTinh);
             thuoc.setSoLuongTon(soLuongTon);
-            thuoc.setGiaBan(giaBan);
-
+            thuoc.setDonGia(BigDecimal.valueOf(giaBan));
             return Optional.of(thuoc);
 
         } catch (Exception e) {

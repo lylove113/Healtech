@@ -1,32 +1,131 @@
 package org.example.healtech.dao;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.example.healtech.model.LichHen;
 import org.example.healtech.model.LichHenDisplay;
 import org.example.healtech.util.DBConnection;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Lớp DAO quản lý Lịch Hẹn - Đã được tối ưu hóa và sửa lỗi kết nối
+ */
 public class LichHenDAO {
 
-
+    // ===== PHẦN 1: CÁC PHƯƠNG THỨC CHO MÀN HÌNH KHÁM BỆNH (STATIC) =====
 
     /**
-     * PHƯƠNG THỨC QUAN TRỌNG NHẤT
-     * Lấy dữ liệu JOIN để hiển thị lên TableView (gồm Tên BN, Tên BS)
+     * Cập nhật trạng thái lịch hẹn (Ví dụ: Chuyển sang "Đang khám" hoặc "Hoàn thành")
      */
-    public List<LichHenDisplay> getLichHenForView() {
+    public static boolean capNhatTrangThai(int maLichHen, String trangThaiMoi) {
+        String sql = "UPDATE LichHen SET TrangThai = ? WHERE MaLichHen = ?";
+        // Sử dụng try-with-resources để tự động đóng kết nối
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, trangThaiMoi);
+            stmt.setInt(2, maLichHen);
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("❌ Lỗi cập nhật trạng thái lịch hẹn: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Lấy danh sách lịch hẹn HÔM NAY theo bộ lọc trạng thái và từ khóa tìm kiếm.
+     * Dùng cho màn hình Khám Bệnh.
+     */
+    public static ObservableList<LichHen> getDanhSachKhamHomNay(String trangThaiFilter, String searchTerm) {
+        ObservableList<LichHen> list = FXCollections.observableArrayList();
+
+        // Xây dựng câu lệnh SQL động
+        StringBuilder sql = new StringBuilder(
+                "SELECT lh.MaLichHen, lh.MaBenhNhan, lh.MaBacSi, bn.HoTen, bn.GioiTinh, bn.NgaySinh, lh.ThoiGianHen, lh.LyDoKham, lh.TrangThai " +
+                        "FROM LichHen lh " +
+                        "JOIN BenhNhan bn ON lh.MaBenhNhan = bn.MaBenhNhan " +
+                        "WHERE DATE(lh.ThoiGianHen) = CURDATE() " // Chỉ lấy lịch hôm nay
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        // 1. Lọc theo trạng thái
+        if (trangThaiFilter != null && !trangThaiFilter.equals("Tất cả")) {
+            if (trangThaiFilter.equals("Chờ khám")) {
+                // Bao gồm cả trạng thái "Đã đặt" và "Đang chờ" vào nhóm chờ khám
+                sql.append("AND lh.TrangThai IN ('Đã đặt', 'Đang chờ', 'Chờ khám') ");
+            } else {
+                sql.append("AND lh.TrangThai = ? ");
+                params.add(trangThaiFilter);
+            }
+        }
+
+        // 2. Lọc theo từ khóa tìm kiếm
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sql.append("AND (bn.HoTen LIKE ? OR bn.MaBenhNhan LIKE ? OR lh.MaLichHen LIKE ?) ");
+            String likeTerm = "%" + searchTerm.trim() + "%";
+            params.add(likeTerm);
+            params.add(likeTerm);
+            params.add(likeTerm);
+        }
+
+        sql.append("ORDER BY lh.ThoiGianHen ASC");
+
+        // Thực thi truy vấn
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            // Gán tham số vào PreparedStatement
+            int index = 1;
+            for (Object param : params) {
+                stmt.setObject(index++, param);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LichHen lh = new LichHen(
+                            rs.getInt("MaLichHen"),
+                            rs.getInt("MaBenhNhan"),
+                            rs.getInt("MaBacSi"),
+                            rs.getString("HoTen"),
+                            rs.getString("GioiTinh"),
+                            rs.getDate("NgaySinh") != null ? rs.getDate("NgaySinh").toLocalDate() : null,
+                            rs.getTimestamp("ThoiGianHen").toLocalDateTime(),
+                            rs.getString("LyDoKham"),
+                            rs.getString("TrangThai")
+                    );
+                    list.add(lh);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("❌ Lỗi lấy danh sách khám hôm nay: " + e.getMessage());
+        }
+        return list;
+    }
+
+
+    // ===== PHẦN 2: CÁC PHƯƠNG THỨC CRUD CƠ BẢN (STATIC HOẶC INSTANCE) =====
+    // Để tiện lợi, mình chuyển hết sang STATIC để dễ gọi từ bất kỳ đâu.
+
+    /**
+     * Lấy dữ liệu hiển thị cho bảng quản lý lịch hẹn tổng quát (Admin).
+     */
+    public static List<LichHenDisplay> getLichHenForView() {
         List<LichHenDisplay> list = new ArrayList<>();
+        // Lưu ý: Kiểm tra lại tên cột MaNienVien hay MaNhanVien trong DB của bạn
         String query = "SELECT lh.MaLichHen, lh.ThoiGianHen, lh.LyDoKham, lh.TrangThai, " +
                 "bn.HoTen AS TenBenhNhan, nv.HoTen AS TenBacSi " +
                 "FROM LichHen lh " +
                 "LEFT JOIN BenhNhan bn ON lh.MaBenhNhan = bn.MaBenhNhan " +
-                "LEFT JOIN NhanVien nv ON lh.MaBacSi = nv.MaNhanVien " +
+                "LEFT JOIN NhanVien nv ON lh.MaBacSi = nv.MaNhanVien " + // Đã sửa MaNienVien -> MaNhanVien (Check lại DB của bạn)
                 "ORDER BY lh.ThoiGianHen DESC";
 
-        // ✅ LẤY CONNECTION TRONG try-with-resources
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -44,16 +143,16 @@ public class LichHenDAO {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("❌ Lỗi khi lấy danh sách lịch hẹn (JOIN): " + e.getMessage());
         }
         return list;
     }
 
-    // Thêm mới lịch hẹn
-    public boolean addLichHen(LichHen lichHen) {
+    /**
+     * Thêm mới lịch hẹn.
+     */
+    public static boolean addLichHen(LichHen lichHen) {
         String query = "INSERT INTO LichHen (MaBenhNhan, MaBacSi, ThoiGianHen, LyDoKham, TrangThai) VALUES (?, ?, ?, ?, ?)";
 
-        // ✅ LẤY CONNECTION TRONG try-with-resources
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
 
@@ -66,18 +165,16 @@ public class LichHenDAO {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("❌ Lỗi khi thêm lịch hẹn: " + e.getMessage());
             return false;
         }
     }
 
     /**
-     * Phương thức update đầy đủ
+     * Cập nhật thông tin lịch hẹn.
      */
-    public boolean updateLichHen(LichHen lichHen) {
+    public static boolean updateLichHen(LichHen lichHen) {
         String query = "UPDATE LichHen SET MaBenhNhan = ?, MaBacSi = ?, ThoiGianHen = ?, LyDoKham = ?, TrangThai = ? WHERE MaLichHen = ?";
 
-        // ✅ LẤY CONNECTION TRONG try-with-resources
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
 
@@ -91,16 +188,16 @@ public class LichHenDAO {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("❌ Lỗi khi cập nhật lịch hẹn: " + e.getMessage());
             return false;
         }
     }
 
-    // Xóa lịch hẹn
-    public boolean deleteLichHen(int maLichHen) {
+    /**
+     * Xóa lịch hẹn.
+     */
+    public static boolean deleteLichHen(int maLichHen) {
         String query = "DELETE FROM LichHen WHERE MaLichHen = ?";
 
-        // ✅ LẤY CONNECTION TRONG try-with-resources
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
 
@@ -108,7 +205,6 @@ public class LichHenDAO {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("❌ Lỗi khi xóa lịch hẹn: " + e.getMessage());
             return false;
         }
     }

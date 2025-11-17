@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.healtech.controller.KeDonThuocController">
+    <top>
+        <VBox prefHeight="100.0" prefWidth="100.0" spacing="5.0" style="-fx-background-color: #f4f4f4; -fx-border-color: #ddd; -fx-border-width: 0 0 1 0;" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="10.0" left="15.0" right="15.0" top="10.0" />
+            </padding>
+            <children>
+                <Label text="KÊ ĐƠN THUỐC" textFill="#005a9e">
+                    <font>
+                        <Font name="System Bold" size="20.0" />
+                    </font>
+                </Label>
+                <GridPane hgap="10.0">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="5.0">
+                            <children>
+                                <Label text="Bệnh nhân:" />
+                                <Label fx:id="lblTenBenhNhan" text="Nguyễn Văn A" textFill="#005a9e">
+                                    <font>
+                                        <Font name="System Bold" size="13.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1">
+                            <children>
+                                <Label text="Mã BN:" />
+                                <Label fx:id="lblMaBenhNhan" text="BN12345" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.rowIndex="1">
+                            <children>
+                                <Label text="Chẩn đoán:" />
+                                <Label fx:id="lblChanDoan" text="Viêm họng cấp" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <children>
+                                <Label text="Mã Phiếu Khám:" />
+                                <Label fx:id="lblMaPhieuKham" text="PK001" />
+                            </children>
+                        </HBox>
+                    </children>
+                </GridPane>
+            </children>
+        </VBox>
+    </top>
+    <center>
+        <SplitPane dividerPositions="0.4" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <items>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                    <children>
+                        <VBox layoutX="57.0" layoutY="59.0" prefHeight="447.0" prefWidth="354.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                            <children>
+                                <Label text="1. TÌM KIẾM THUỐC">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                                <TextField fx:id="txtTimKiemThuoc" promptText="Gõ tên thuốc để tìm..." />
+                                <TableView fx:id="tblTimKiemThuoc" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colTenThuoc" prefWidth="170.0" text="Tên Thuốc" />
+                                        <TableColumn fx:id="colDonViTinh" prefWidth="75.0" text="ĐVT" />
+                                        <TableColumn fx:id="colGiaBan" prefWidth="85.0" text="Giá Bán" />
+                                    </columns>
+                                </TableView>
+                                <Label text="2. THÊM VÀO ĐƠN">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                                <GridPane hgap="10.0" vgap="5.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="166.0" minWidth="10.0" prefWidth="74.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="265.0" minWidth="10.0" prefWidth="256.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <Label text="Số lượng:" />
+                                        <Label text="Liều dùng:" GridPane.rowIndex="1" />
+                                        <TextField fx:id="txtSoLuong" prefWidth="246.0" GridPane.columnIndex="1" />
+                                        <TextField fx:id="txtLieuDung" promptText="Vd: Sáng 1 viên, Tối 1 viên sau ăn" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    </children>
+                                </GridPane>
+                                <Button fx:id="btnThemVaoDon" mnemonicParsing="false" onAction="#handleThemVaoDon" prefHeight="35.0" prefWidth="357.0" text="Thêm vào đơn >>" style="-fx-font-weight: bold; -fx-background-color: #28a745; -fx-text-fill: white;"/>
+                            </children>
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                    <children>
+                        <VBox layoutX="60.0" layoutY="24.0" prefHeight="447.0" prefWidth="536.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                            <children>
+                                <Label text="3. ĐƠN THUỐC HIỆN TẠI">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                                <TableView fx:id="tblDonThuocHienTai" prefHeight="245.0" prefWidth="516.0" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colThuocTrongDon" prefWidth="170.0" text="Tên Thuốc" />
+                                        <TableColumn fx:id="colSoLuong" prefWidth="60.0" text="SL" />
+                                        <TableColumn fx:id="colLieuDung" prefWidth="285.0" text="Liều Dùng / Cách Dùng" />
+                                    </columns>
+                                </TableView>
+                                <Label text="4. LỜI DẶN CỦA BÁC SĨ">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                                <TextArea fx:id="txtLoiDan" prefHeight="100.0" prefWidth="516.0" promptText="Nhập lời dặn chung (tái khám, chế độ ăn...)" />
+                                <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                    <children>
+                                        <Button fx:id="btnHuyDon" mnemonicParsing="false" onAction="#handleHuyDon" prefHeight="35.0" text="Hủy" style="-fx-background-color: #6c757d; -fx-text-fill: white;"/>
+                                        <Button fx:id="btnLuuDon" mnemonicParsing="false" onAction="#handleLuuDon" prefHeight="35.0" prefWidth="150.0" text="Lưu &amp; Hoàn tất" style="-fx-font-weight: bold; -fx-background-color: #007bff; -fx-text-fill: white;"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+                        </VBox>
+                    </children>
+                </AnchorPane>
+            </items>
+        </SplitPane>
+    </center>
+</BorderPane>

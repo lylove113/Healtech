@@ -8,20 +8,18 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Lớp DAO quản lý Thuốc - Đã được chuyển đổi hoàn toàn sang STATIC
+ */
 public class ThuocDAO {
-    private Connection conn;
 
-    public ThuocDAO() {
-        this.conn = DBConnection.getConnection();
-    }
-
-    // Lấy tất cả thuốc - SỬA LẠI CÂU TRUY VẤN
-    public List<Thuoc> getAllThuoc() {
+    // --- LẤY TẤT CẢ THUỐC ---
+    public static List<Thuoc> getAllThuoc() {
         List<Thuoc> list = new ArrayList<>();
-        // CHỈ SELECT CÁC CỘT CÓ TRONG DATABASE
         String query = "SELECT MaThuoc, TenThuoc, DonViTinh, SoLuongTon, GiaBan FROM Thuoc ORDER BY MaThuoc ASC";
 
-        try (Statement stmt = conn.createStatement();
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
 
             while (rs.next()) {
@@ -35,16 +33,17 @@ public class ThuocDAO {
         return list;
     }
 
-    // Thêm thuốc mới - SỬA LẠI CÂU TRUY VẤN
-    public boolean addThuoc(Thuoc thuoc) {
-        // LOẠI BỎ NgayTao khỏi câu lệnh INSERT
+    // --- THÊM THUỐC MỚI ---
+    public static boolean addThuoc(Thuoc thuoc) {
         String query = "INSERT INTO Thuoc (TenThuoc, DonViTinh, SoLuongTon, GiaBan) VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
             pstmt.setString(1, thuoc.getTenThuoc());
             pstmt.setString(2, thuoc.getDonViTinh());
             pstmt.setInt(3, thuoc.getSoLuongTon());
-            pstmt.setDouble(4, thuoc.getGiaBan());
+            pstmt.setBigDecimal(4, thuoc.getDonGia());
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
@@ -63,15 +62,17 @@ public class ThuocDAO {
         }
     }
 
-    // Cập nhật thuốc
-    public boolean updateThuoc(Thuoc thuoc) {
+    // --- CẬP NHẬT THÔNG TIN THUỐC ---
+    public static boolean updateThuoc(Thuoc thuoc) {
         String query = "UPDATE Thuoc SET TenThuoc=?, DonViTinh=?, SoLuongTon=?, GiaBan=? WHERE MaThuoc=?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
             pstmt.setString(1, thuoc.getTenThuoc());
             pstmt.setString(2, thuoc.getDonViTinh());
             pstmt.setInt(3, thuoc.getSoLuongTon());
-            pstmt.setDouble(4, thuoc.getGiaBan());
+            pstmt.setBigDecimal(4, thuoc.getDonGia());
             pstmt.setInt(5, thuoc.getMaThuoc());
 
             return pstmt.executeUpdate() > 0;
@@ -82,11 +83,13 @@ public class ThuocDAO {
         }
     }
 
-    // Xóa thuốc
-    public boolean deleteThuoc(int maThuoc) {
+    // --- XÓA THUỐC ---
+    public static boolean deleteThuoc(int maThuoc) {
         String query = "DELETE FROM Thuoc WHERE MaThuoc=?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
             pstmt.setInt(1, maThuoc);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -96,25 +99,28 @@ public class ThuocDAO {
         }
     }
 
-    // Tìm kiếm thuốc - SỬA LẠI CÂU TRUY VẤN
-    public List<Thuoc> timKiemThuoc(String keyword) {
+    // --- TÌM KIẾM THUỐC ---
+    public static List<Thuoc> timKiemThuoc(String keyword) {
         List<Thuoc> list = new ArrayList<>();
         String query = "SELECT MaThuoc, TenThuoc, DonViTinh, SoLuongTon, GiaBan FROM Thuoc WHERE TenThuoc LIKE ? OR MaThuoc = ? ORDER BY MaThuoc ASC";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
             pstmt.setString(1, "%" + keyword + "%");
 
+            // Kiểm tra nếu keyword là số thì tìm theo ID, nếu không thì gán -1 để bỏ qua
             try {
                 pstmt.setInt(2, Integer.parseInt(keyword));
             } catch (NumberFormatException e) {
                 pstmt.setInt(2, -1);
             }
 
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                Thuoc thuoc = mapResultSetToThuoc(rs);
-                list.add(thuoc);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Thuoc thuoc = mapResultSetToThuoc(rs);
+                    list.add(thuoc);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -123,15 +129,40 @@ public class ThuocDAO {
         return list;
     }
 
-    // Helper method - SỬA LẠI ĐỂ KHÔNG ĐỌC NgayTao
-    private Thuoc mapResultSetToThuoc(ResultSet rs) throws SQLException {
+    // --- CẬP NHẬT SỐ LƯỢNG TỒN (Đã sửa lỗi thiếu return) ---
+    /**
+     * Cập nhật số lượng tồn kho mới cho thuốc.
+     * @param maThuoc ID thuốc cần sửa
+     * @param soLuongMoi Số lượng tồn kho MỚI (đã tính toán xong)
+     */
+    public static boolean capNhatSoLuongTon(int maThuoc, int soLuongMoi) {
+        String query = "UPDATE Thuoc SET SoLuongTon = ? WHERE MaThuoc = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setInt(1, soLuongMoi);
+            pstmt.setInt(2, maThuoc);
+
+            return pstmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("❌ Lỗi khi cập nhật số lượng tồn: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // --- HÀM PHỤ TRỢ: Map dữ liệu từ SQL sang Object ---
+    private static Thuoc mapResultSetToThuoc(ResultSet rs) throws SQLException {
         Thuoc thuoc = new Thuoc();
         thuoc.setMaThuoc(rs.getInt("MaThuoc"));
         thuoc.setTenThuoc(rs.getString("TenThuoc"));
         thuoc.setDonViTinh(rs.getString("DonViTinh"));
         thuoc.setSoLuongTon(rs.getInt("SoLuongTon"));
-        thuoc.setGiaBan(rs.getDouble("GiaBan"));
+        thuoc.setDonGia(rs.getBigDecimal("GiaBan"));
 
+        // Gán ngày tạo là ngày hiện tại (vì DB có thể không lưu hoặc logic UI cần vậy)
         thuoc.setNgayTao(LocalDate.now());
 
         return thuoc;

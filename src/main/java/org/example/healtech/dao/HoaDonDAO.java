@@ -161,7 +161,7 @@ public class HoaDonDAO {
 
             pstmt.setInt(1, hoaDon.getMaPhieuKham());
             pstmt.setInt(2, hoaDon.getMaBenhNhan());
-            pstmt.setDate(3, Date.valueOf(hoaDon.getNgayThanhToan())); // Chuyển LocalDate -> sql.Date
+            pstmt.setTimestamp(3, java.sql.Timestamp.valueOf(hoaDon.getNgayThanhToan())); // Chuyển LocalDate -> sql.Date
             pstmt.setDouble(4, hoaDon.getTongTien());
             pstmt.setString(5, hoaDon.getTrangThai());
 
