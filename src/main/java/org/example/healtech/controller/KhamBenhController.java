@@ -260,6 +260,20 @@ public class KhamBenhController implements Initializable {
         }
 
         ObservableList<LichHen> list = LichHenDAO.getDanhSachKhamHomNay(trangThaiFilter, searchTerm);
+
+        // --- BỔ SUNG DEBUG LOG TẠI ĐÂY ---
+        System.out.println("--- DEBUG DỮ LIỆU KHÁM BỆNH ---");
+        System.out.println("Bộ lọc trạng thái đang sử dụng: " + trangThaiFilter);
+        System.out.println("Từ khóa tìm kiếm: " + searchTerm);
+        System.out.println("Số lượng bệnh nhân được tải từ DAO: " + list.size());
+        // In ra mã và tên bệnh nhân đầu tiên (nếu có) để kiểm tra ngày giờ
+        if (!list.isEmpty()) {
+            LichHen firstPatient = list.get(0);
+            System.out.println("Kiểm tra BN đầu tiên: MaLH=" + firstPatient.getMaLichHen() + ", Tên=" + firstPatient.getTenBenhNhan() + ", Trạng thái=" + firstPatient.getTrangThai());
+        }
+        System.out.println("---------------------------------");
+        // ------------------------------------
+
         waitingTable.setItems(list);
         waitingTable.getSelectionModel().clearSelection();
 

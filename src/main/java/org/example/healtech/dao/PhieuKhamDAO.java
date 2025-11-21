@@ -11,15 +11,39 @@ public class PhieuKhamDAO {
 
     // --- PHƯƠNG THỨC CŨ CỦA BẠN (Rất tốt, giữ nguyên) ---
     public static int taoPhieuKham(int maLichHen, int maBenhNhan, int maBacSi, String trieuChung, String chuanDoan) {
-        String sql = "INSERT INTO PhieuKhamBenh (MaLichHen, MaBenhNhan, MaBacSi, NgayKham, TrieuChung, ChuanDoan) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        // --- BƯỚC 1: KIỂM TRA XEM ĐÃ CÓ PHIẾU KHÁM NÀY CHƯA? ---
+        String checkSql = "SELECT MaPhieuKham FROM PhieuKhamBenh WHERE MaLichHen = ?";
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+
+            checkStmt.setInt(1, maLichHen);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                // NẾU CÓ RỒI: Lấy ID cũ ra
+                int idCu = rs.getInt("MaPhieuKham");
+                System.out.println("DEBUG: Tìm thấy phiếu khám cũ (ID: " + idCu + "). Đang cập nhật thông tin mới...");
+
+                // Cập nhật lại Triệu chứng & Chẩn đoán mới nhất (đề phòng bác sĩ sửa lại lời chẩn đoán)
+                updatePhieuKham(conn, idCu, trieuChung, chuanDoan);
+
+                return idCu; // Trả về ID cũ để dùng tiếp
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // --- BƯỚC 2: NẾU CHƯA CÓ THÌ MỚI INSERT (TẠO MỚI) ---
+        String insertSql = "INSERT INTO PhieuKhamBenh (MaLichHen, MaBenhNhan, MaBacSi, NgayKham, TrieuChung, ChuanDoan) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, maLichHen);
             stmt.setInt(2, maBenhNhan);
             stmt.setInt(3, maBacSi);
-            stmt.setDate(4, Date.valueOf(LocalDate.now()));
+            stmt.setDate(4, java.sql.Date.valueOf(java.time.LocalDate.now()));
             stmt.setString(5, trieuChung);
             stmt.setString(6, chuanDoan);
 
@@ -27,14 +51,30 @@ public class PhieuKhamDAO {
             if (affectedRows > 0) {
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
-                        return rs.getInt(1); // Trả về MaPhieuKham
+                        int idMoi = rs.getInt(1);
+                        System.out.println("DEBUG: Đã tạo phiếu khám MỚI (ID: " + idMoi + ")");
+                        return idMoi;
                     }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            System.err.println("❌ Lỗi tạo phiếu khám: " + e.getMessage());
         }
-        return -1; // Lỗi
+        return -1; // Trả về -1 nếu lỗi
+    }
+
+    // --- HÀM PHỤ ĐỂ CẬP NHẬT (Copy thêm hàm này vào bên dưới hàm trên) ---
+    private static void updatePhieuKham(Connection conn, int maPhieuKham, String trieuChung, String chuanDoan) {
+        String sql = "UPDATE PhieuKhamBenh SET TrieuChung = ?, ChuanDoan = ? WHERE MaPhieuKham = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, trieuChung);
+            stmt.setString(2, chuanDoan);
+            stmt.setInt(3, maPhieuKham);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     // --- 1. BỔ SUNG: LẤY LỊCH SỬ KHÁM BỆNH ---

@@ -49,7 +49,7 @@ public class LichHenDAO {
                 "SELECT lh.MaLichHen, lh.MaBenhNhan, lh.MaBacSi, bn.HoTen, bn.GioiTinh, bn.NgaySinh, lh.ThoiGianHen, lh.LyDoKham, lh.TrangThai " +
                         "FROM LichHen lh " +
                         "JOIN BenhNhan bn ON lh.MaBenhNhan = bn.MaBenhNhan " +
-                        "WHERE DATE(lh.ThoiGianHen) = CURDATE() " // Chỉ lấy lịch hôm nay
+                        "WHERE 1=1 " // <--- ĐÃ SỬA: Tạm thời dùng 1=1 (luôn đúng) để bỏ qua lọc ngày
         );
 
         List<Object> params = new ArrayList<>();
@@ -64,6 +64,8 @@ public class LichHenDAO {
                 params.add(trangThaiFilter);
             }
         }
+
+
 
         // 2. Lọc theo từ khóa tìm kiếm
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {

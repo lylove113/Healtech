@@ -135,6 +135,9 @@ public class KeDonThuocController implements Initializable {
     // --- 5. XỬ LÝ NÚT LƯU (Lưu vào DB) ---
     @FXML
     private void handleLuuDon(ActionEvent event) {
+        System.out.println("DEBUG: Đang lưu đơn cho Mã Phiếu Khám: " + phieuKhamHienTai.getMaPhieuKham());
+
+
         if (listThuocKeDon.isEmpty()) { showAlert("Đơn thuốc trống!"); return; }
 
         try (Connection conn = DBConnection.getConnection()) {
