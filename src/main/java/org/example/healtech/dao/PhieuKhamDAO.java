@@ -9,32 +9,24 @@ import java.time.LocalDate;
 
 public class PhieuKhamDAO {
 
-    // --- PHƯƠNG THỨC CŨ CỦA BẠN (Rất tốt, giữ nguyên) ---
     public static int taoPhieuKham(int maLichHen, int maBenhNhan, int maBacSi, String trieuChung, String chuanDoan) {
-        // --- BƯỚC 1: KIỂM TRA XEM ĐÃ CÓ PHIẾU KHÁM NÀY CHƯA? ---
+        // --- BƯỚC 1: KIỂM TRA
         String checkSql = "SELECT MaPhieuKham FROM PhieuKhamBenh WHERE MaLichHen = ?";
-
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
             checkStmt.setInt(1, maLichHen);
             ResultSet rs = checkStmt.executeQuery();
-
             if (rs.next()) {
-                // NẾU CÓ RỒI: Lấy ID cũ ra
                 int idCu = rs.getInt("MaPhieuKham");
-                System.out.println("DEBUG: Tìm thấy phiếu khám cũ (ID: " + idCu + "). Đang cập nhật thông tin mới...");
-
-                // Cập nhật lại Triệu chứng & Chẩn đoán mới nhất (đề phòng bác sĩ sửa lại lời chẩn đoán)
+                System.out.println("DEBUG: Tìm thấy phiếu cũ (ID: " + idCu + "). Cập nhật...");
                 updatePhieuKham(conn, idCu, trieuChung, chuanDoan);
-
-                return idCu; // Trả về ID cũ để dùng tiếp
+                return idCu;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        // --- BƯỚC 2: NẾU CHƯA CÓ THÌ MỚI INSERT (TẠO MỚI) ---
+        // --- BƯỚC 2: TẠO MỚI (Sửa ở đây) ---
         String insertSql = "INSERT INTO PhieuKhamBenh (MaLichHen, MaBenhNhan, MaBacSi, NgayKham, TrieuChung, ChuanDoan) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
@@ -53,6 +45,9 @@ public class PhieuKhamDAO {
                     if (rs.next()) {
                         int idMoi = rs.getInt(1);
                         System.out.println("DEBUG: Đã tạo phiếu khám MỚI (ID: " + idMoi + ")");
+
+                        themPhiKhamTuDong(idMoi);
+
                         return idMoi;
                     }
                 }
@@ -61,7 +56,7 @@ public class PhieuKhamDAO {
             e.printStackTrace();
             System.err.println("❌ Lỗi tạo phiếu khám: " + e.getMessage());
         }
-        return -1; // Trả về -1 nếu lỗi
+        return -1;
     }
 
     // --- HÀM PHỤ ĐỂ CẬP NHẬT (Copy thêm hàm này vào bên dưới hàm trên) ---
@@ -138,5 +133,20 @@ public class PhieuKhamDAO {
             e.printStackTrace();
         }
         return pk; // Trả về null nếu không tìm thấy
+    }
+    private static void themPhiKhamTuDong(int maPhieuKham) {
+        String sql = "INSERT INTO ChiTietDichVu (MaPhieuKham, MaDichVu, SoLuong, ThanhTien) VALUES (?, 1, 1, 150000)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, maPhieuKham);
+            stmt.executeUpdate();
+            System.out.println("✅ Đã tự động thêm 'Phí Khám Bệnh' cho phiếu " + maPhieuKham);
+
+        } catch (SQLException e) {
+            System.err.println("⚠️ Không thể thêm phí khám tự động: " + e.getMessage());
+            // Không throw lỗi để quy trình chính vẫn tiếp tục
+        }
     }
 }

@@ -2,22 +2,29 @@ package org.example.healtech.model;
 
 public class ChiTietDichVu {
     private String tenDichVu;
-    private double phiDichVu;
+    private Double phiDichVu; // Hoặc giaDichVu, tùy bạn đặt, nhưng phải thống nhất
 
-    // Constructor (Bạn có thể tạo một constructor đầy đủ hơn nếu cần)
-    public ChiTietDichVu(String tenDichVu, double phiDichVu) {
+    public ChiTietDichVu(String tenDichVu, Double phiDichVu) {
         this.tenDichVu = tenDichVu;
         this.phiDichVu = phiDichVu;
     }
 
-    // Getters
+    // --- CÁC GETTER BẮT BUỘC (TableView dùng cái này để lấy dữ liệu) ---
+
     public String getTenDichVu() {
         return tenDichVu;
     }
 
-    public double getPhiDichVu() {
+    public void setTenDichVu(String tenDichVu) {
+        this.tenDichVu = tenDichVu;
+    }
+
+    // Quan trọng: Tên getter phải khớp với PropertyValueFactory
+    public Double getPhiDichVu() {
         return phiDichVu;
     }
 
-    // Setters (Nếu bạn cần)
+    public void setPhiDichVu(Double phiDichVu) {
+        this.phiDichVu = phiDichVu;
+    }
 }

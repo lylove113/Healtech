@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="mainAnchorPane" prefHeight="700.0" prefWidth="900.0"
+<AnchorPane fx:id="mainAnchorPane" onMouseEntered="#handleMouseEnter" prefHeight="700.0" prefWidth="900.0"
             xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.healtech.controller.ThanhToanController">
     <children>
