@@ -50,6 +50,9 @@
         <Button text="Tìm" onAction="#handleSearch"/>
     </HBox>
 
+
+    <ComboBox fx:id="cboChucVuFilter" prefWidth="150" promptText="Lọc theo chức vụ"/>
+
     <TableView fx:id="nhanVienTableView" prefHeight="400">
         <columns>
             <TableColumn fx:id="colMaNV" text="Mã NV" prefWidth="80"/>
