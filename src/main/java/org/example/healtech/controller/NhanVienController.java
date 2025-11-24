@@ -1,4 +1,6 @@
-package org.example.healtech.controller;
+
+
+        package org.example.healtech.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -8,7 +10,6 @@ import javafx.scene.control.*;
 import org.example.healtech.dao.NhanVienDAO;
 import org.example.healtech.model.NhanVien;
 
-import java.util.List;
 import java.util.Optional;
 
 public class NhanVienController {
@@ -29,17 +30,32 @@ public class NhanVienController {
     @FXML private TextField txtEmail;
     @FXML private TextField txtSearch;
 
+    @FXML private ComboBox<String> cboChucVuFilter;
+
     private final NhanVienDAO dao = new NhanVienDAO();
     private final ObservableList<NhanVien> nhanVienList = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
+
+
+        cboChucVuFilter.setItems(FXCollections.observableArrayList(
+                "Bác sĩ", "Y tá", "Lễ tân", "Quản lý"
+        ));
+
+
+        cboChucVuFilter.valueProperty().addListener((obs, oldValue, newValue) -> {
+            filterByChucVu(newValue);
+        });
+
+
         colMaNV.setCellValueFactory(data -> data.getValue().maNhanVienProperty().asObject());
         colHoTen.setCellValueFactory(data -> data.getValue().hoTenProperty());
         colChuyenKhoa.setCellValueFactory(data -> data.getValue().chuyenKhoaProperty());
         colChucVu.setCellValueFactory(data -> data.getValue().chucVuProperty());
         colSoDienThoai.setCellValueFactory(data -> data.getValue().soDienThoaiProperty());
         colEmail.setCellValueFactory(data -> data.getValue().emailProperty());
+
 
         cmbChucVu.setItems(FXCollections.observableArrayList("Bác sĩ", "Y tá", "Lễ tân", "Quản lý"));
 
@@ -53,6 +69,20 @@ public class NhanVienController {
     private void loadNhanVien() {
         nhanVienList.setAll(dao.getAll());
         nhanVienTableView.setItems(nhanVienList);
+    }
+
+
+    private void filterByChucVu(String role) {
+        if (role == null || role.isEmpty()) {
+            nhanVienTableView.setItems(nhanVienList); // hiển thị mọi nhân viên
+            return;
+        }
+
+        ObservableList<NhanVien> filtered = nhanVienList.filtered(
+                nv -> nv.getChucVu().equalsIgnoreCase(role)
+        );
+
+        nhanVienTableView.setItems(filtered);
     }
 
     private void setForm(NhanVien nv) {
@@ -97,20 +127,22 @@ public class NhanVienController {
     private void handleAdd(ActionEvent e) {
         if (!validateForm()) return;
 
-        NhanVien nv = new NhanVien(0,
+        NhanVien nv = new NhanVien(
+                0,
                 txtHoTen.getText(),
                 txtChuyenKhoa.getText(),
                 cmbChucVu.getValue(),
                 txtSoDienThoai.getText(),
                 txtEmail.getText(),
-                "123456");
+                "123456"
+        );
 
         if (dao.insert(nv)) {
             loadNhanVien();
             clearForm();
             showAlert("Thành công", "Đã thêm nhân viên!", Alert.AlertType.INFORMATION);
         } else {
-            showAlert("Lỗi", "Không thể thêm nhân viên (trùng SĐT hoặc Email).", Alert.AlertType.ERROR);
+            showAlert("Lỗi", "Không thể thêm nhân viên.", Alert.AlertType.ERROR);
         }
     }
 
@@ -121,6 +153,7 @@ public class NhanVienController {
             showAlert("Chưa chọn", "Hãy chọn nhân viên cần sửa!", Alert.AlertType.WARNING);
             return;
         }
+
         if (!validateForm()) return;
 
         selected.setHoTen(txtHoTen.getText());
@@ -132,7 +165,7 @@ public class NhanVienController {
         if (dao.update(selected)) {
             loadNhanVien();
             clearForm();
-            showAlert("Thành công", "Cập nhật thông tin thành công!", Alert.AlertType.INFORMATION);
+            showAlert("Thành công", "Đã cập nhật!", Alert.AlertType.INFORMATION);
         } else {
             showAlert("Lỗi", "Không thể cập nhật!", Alert.AlertType.ERROR);
         }
@@ -146,18 +179,15 @@ public class NhanVienController {
             return;
         }
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Xác nhận xóa");
-        alert.setHeaderText("Bạn có chắc muốn xóa nhân viên này?");
-        Optional<ButtonType> result = alert.showAndWait();
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Bạn chắc chắn muốn xóa?", ButtonType.OK, ButtonType.CANCEL);
 
-        if (result.isPresent() && result.get() == ButtonType.OK) {
+        if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             if (dao.delete(selected.getMaNhanVien())) {
                 loadNhanVien();
                 clearForm();
-                showAlert("Thành công", "Đã xóa nhân viên!", Alert.AlertType.INFORMATION);
+                showAlert("Thành công", "Đã xóa!", Alert.AlertType.INFORMATION);
             } else {
-                showAlert("Lỗi", "Không thể xóa nhân viên!", Alert.AlertType.ERROR);
+                showAlert("Lỗi", "Không thể xóa!", Alert.AlertType.ERROR);
             }
         }
     }
