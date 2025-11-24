@@ -1,17 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" alignment="CENTER" spacing="10">
-    <Label text="Quản lý Nhân Viên" style="-fx-font-size: 24; -fx-font-weight: bold;"/>
-    <TableView fx:id="nhanVienTableView" prefWidth="800" prefHeight="400">
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.healtech.controller.NhanVienController"
+      spacing="10">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Quản lý Nhân Viên"
+           style="-fx-font-size: 22; -fx-font-weight: bold;"/>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="30"/>
+            <ColumnConstraints percentWidth="70"/>
+        </columnConstraints>
+
+        <Label text="Mã NV:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtMaNV" GridPane.rowIndex="0" GridPane.columnIndex="1" editable="false"/>
+
+        <Label text="Họ tên:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtHoTen" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Chuyên khoa:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtChuyenKhoa" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Chức vụ:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="cmbChucVu" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Số điện thoại:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtSoDienThoai" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Email:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtEmail" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="10">
+        <Button text="Thêm" onAction="#handleAdd"/>
+        <Button text="Sửa" onAction="#handleEdit"/>
+        <Button text="Xóa" onAction="#handleDelete"/>
+    </HBox>
+
+    <HBox spacing="10">
+        <TextField fx:id="txtSearch" promptText="Tìm theo tên..."/>
+        <Button text="Tìm" onAction="#handleSearch"/>
+    </HBox>
+
+    <TableView fx:id="nhanVienTableView" prefHeight="400">
         <columns>
-            <TableColumn fx:id="colMaNV" text="Mã NV"/>
-            <TableColumn fx:id="colHoTen" text="Họ tên"/>
-            <TableColumn fx:id="colChuyenKhoa" text="Chuyên khoa"/>
-            <TableColumn fx:id="colChucVu" text="Chức vụ"/>
-            <TableColumn fx:id="colSoDienThoai" text="Số điện thoại"/>
-            <TableColumn fx:id="colEmail" text="Email"/>
+            <TableColumn fx:id="colMaNV" text="Mã NV" prefWidth="80"/>
+            <TableColumn fx:id="colHoTen" text="Họ tên" prefWidth="120"/>
+            <TableColumn fx:id="colChuyenKhoa" text="Chuyên khoa" prefWidth="120"/>
+            <TableColumn fx:id="colChucVu" text="Chức vụ" prefWidth="100"/>
+            <TableColumn fx:id="colSoDienThoai" text="SĐT" prefWidth="120"/>
+            <TableColumn fx:id="colEmail" text="Email" prefWidth="150"/>
         </columns>
     </TableView>
+
 </VBox>
